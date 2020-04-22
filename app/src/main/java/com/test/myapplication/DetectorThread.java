@@ -1,17 +1,18 @@
 package com.test.myapplication;
 
+import com.musicg.wave.Wave;
 import com.musicg.wave.WaveHeader;
 
 import android.media.AudioFormat;
 import android.media.AudioRecord;
+import android.media.AudioRecordingConfiguration;
 import android.os.Handler;
-import android.os.Message;
 import android.util.Log;
 
 public class DetectorThread extends Thread {
 
 	String TAG = "SnoreRef_DetectorThread";
-	private RecorderThread recorder;
+	private WavReader mWaveReader;
 	private volatile Thread _thread;
 	private WaveHeader waveHeader;
 	private SnoringApi snoringApi;
@@ -20,31 +21,31 @@ public class DetectorThread extends Thread {
 
 	// ----------------------------------
 
-	public DetectorThread(RecorderThread recorder, Handler alarmhandler) {
+	public DetectorThread() {
 		// TODO Auto-generated constructor stub
-		this.recorder = recorder;
-		AudioRecord audioRecord = recorder.getAudioRecord();
+		this.mWaveReader = new WavReader(filepath);
 		Log.e(TAG, "DetectorThread");
-		this.alarmhandler = alarmhandler;
 
-		int bitsPerSample = 0;
-		if (audioRecord.getAudioFormat() == AudioFormat.ENCODING_PCM_16BIT) {
+/*		if (audioRecord.getAudioFormat() == AudioFormat.ENCODING_PCM_16BIT) {
 			bitsPerSample = 16;
 		} else if (audioRecord.getAudioFormat() == AudioFormat.ENCODING_PCM_8BIT) {
 			bitsPerSample = 8;
-		}
+		}*/
 
-		int channel = 0;
 		// whistle detection only supports mono channel
-		if (audioRecord.getChannelConfiguration() == AudioFormat.CHANNEL_CONFIGURATION_MONO) {
+/*		if (audioRecord.getChannelConfiguration() == AudioFormat.CHANNEL_CONFIGURATION_MONO) {
 			channel = 1;
-		}
+		}*/
+
+		int bitsPerSample = 16;
+		int channel = 1;
+		int samplerate = 44100;
 
 		// TODO: added detection init
 		waveHeader = new WaveHeader();
 		waveHeader.setChannels(channel);
 		waveHeader.setBitsPerSample(bitsPerSample);
-		waveHeader.setSampleRate(audioRecord.getSampleRate());
+		waveHeader.setSampleRate(samplerate);
 		snoringApi = new SnoringApi(waveHeader);
 	}
 
@@ -74,7 +75,7 @@ public class DetectorThread extends Thread {
 			while (_thread == thisThread) {
 				// detect sound
 				Log.e(TAG, "while");
-				buffer = recorder.getFrameBytes();
+				buffer = mWaveReader.getFrameBytes();
 				if (buffer != null) {
 					Log.d(TAG, "buffer size " + buffer.length);
 				} else {
@@ -90,22 +91,11 @@ public class DetectorThread extends Thread {
 							+ AlarmStaticVariables.snoringCount);
 					break;
 
-/*					if (AlarmStaticVariables.snoringCount >= AlarmStaticVariables.sampleCount) {
-						AlarmStaticVariables.snoringCount = 0;
-						if (!AlarmStaticVariables.inProcess) {
-							AlarmStaticVariables.inProcess = true;
-							int level = 1;
-							Message msg = new Message();
-							msg.arg1 = level;
-							alarmhandler.sendMessage(msg);
-						}
-					} */
-
 					// end snore detection
 
 				} else {
 					// no sound detected
-					MainActivity.snoreValue = 0;
+				//	MainActivity.snoreValue = 0;
 				}
 				// end audio analyst
 			}

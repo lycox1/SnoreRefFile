@@ -27,12 +27,6 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".AlarmReceiverActivity" >
-        </activity>
-        <activity android:name=".AlarmSelectActivity" >
-        </activity>
-        <activity android:name=".AlarmRecordActivity" >
-        </activity>
     </application>
 
 </manifest>
