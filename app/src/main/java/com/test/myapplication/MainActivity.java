@@ -26,27 +26,8 @@ public class MainActivity extends Activity {
 	public static int selectedDetection = DETECT_NONE;
 
 	private DetectorThread detectorThread;
-	private RecorderThread recorderThread;
-	private DrawThread drawThread;
 
-	public static int snoreValue = 0;
-
-	private View mainView;
-	private Button mSleepRecordBtn, mAlarmBtn, mRecordBtn, mTestBtn;
-	private TextView txtAbs;
-
-	private Toast mToast;
-
-	private Handler rhandler = new Handler();
-	private Handler showhandler = null;
-	private Handler alarmhandler = null;
-
-	private Intent intent;
-	private PendingIntent pendingIntent;
-	private AlarmManager am;
-
-	private SurfaceView sfv;
-	private Paint mPaint;
+	private Button mSnoreTestStartBtn, mSnoreTestStoptBtn;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -54,114 +35,29 @@ public class MainActivity extends Activity {
 		setContentView(R.layout.activity_main_new);
 		setTitle("UIC SleepTracker Demo");
 
-		mSleepRecordBtn = (Button) this.findViewById(R.id.btnSleepRecord);
-		mAlarmBtn = (Button) findViewById(R.id.btnSelectAlarm);
-		mRecordBtn = (Button) findViewById(R.id.btnRecordAlarm);
-		mTestBtn = (Button) findViewById(R.id.btnAlarmTest);
-		txtAbs = (TextView) findViewById(R.id.txtaverageAbsValue);
-		sfv = (SurfaceView) this.findViewById(R.id.SurfaceView);
-
-		intent = new Intent(MainActivity.this, AlarmReceiverActivity.class);
-		pendingIntent = PendingIntent.getActivity(MainActivity.this, 2, intent,
-				PendingIntent.FLAG_CANCEL_CURRENT);
-		am = (AlarmManager) getSystemService(ALARM_SERVICE);
-
-		mPaint = new Paint();
-		mPaint.setColor(Color.GREEN);
-
-		/**
-		 * show variable handler
-		 */
-		showhandler = new Handler() {
-			public void handleMessage(Message msg) {
-				txtAbs.setText(msg.obj.toString());
-			}
-		};
-
-		/**
-		 * Output alarm handler
-		 */
-		alarmhandler = new Handler() {
-			public void handleMessage(Message msg) {
-				int interval = 1;
-				int i = msg.arg1;
-				setLevel(i);
-				AlarmStaticVariables.level = AlarmStaticVariables.level1;
-				am.set(AlarmManager.RTC_WAKEUP, System.currentTimeMillis()
-						+ (interval * 1000), pendingIntent);
-			}
-		};
+		mSnoreTestStartBtn = (Button) this.findViewById(R.id.btnSleepRecord);
+		mSnoreTestStoptBtn = (Button) findViewById(R.id.btnAlarmTest);
 
 		/**
 		 * Sleep Record Button
 		 */
-		mSleepRecordBtn.setOnClickListener(new OnClickListener() {
+		mSnoreTestStartBtn.setOnClickListener(new OnClickListener() {
 			public void onClick(View view) {
 				selectedDetection = DETECT_SNORE;
-				// alarmThread = new AlarmThread(pendingIntent, am);
-				recorderThread = new RecorderThread(showhandler);
-				recorderThread.start();
-				detectorThread = new DetectorThread(recorderThread,
-						alarmhandler);
+				detectorThread = new DetectorThread();
 				detectorThread.start();
-				drawThread = new DrawThread(sfv.getHeight() / 2, sfv, mPaint);
-				drawThread.start();
-				// clsOscilloscope.baseLine = sfv.getHeight() / 2;
-				// clsOscilloscope.Start(audioRecord, recBufSize, sfv, mPaint);
-
-				mToast = Toast.makeText(getApplicationContext(),
-						"Recording & Detecting start", Toast.LENGTH_LONG);
-				mToast.show();
-				// goListeningView();
-			}
-		});
-
-		/**
-		 * Select alarm Button
-		 */
-		mAlarmBtn.setOnClickListener(new OnClickListener() {
-			public void onClick(View view) {
-				Intent intent = new Intent(MainActivity.this,
-						AlarmSelectActivity.class);
-				startActivity(intent);
-			}
-		});
-
-		/**
-		 * Record name Button
-		 */
-		mRecordBtn.setOnClickListener(new OnClickListener() {
-			public void onClick(View view) {
-				rhandler.removeCallbacks(recordActivity);
-				rhandler.postDelayed(recordActivity, 1000);
 			}
 		});
 
 		/**
 		 * Test
 		 */
-		mTestBtn.setOnClickListener(new OnClickListener() {
+		mSnoreTestStoptBtn.setOnClickListener(new OnClickListener() {
 			public void onClick(View view) {
-				int level = 1;
-				setLevel(level);
-				startOneShoot();
+				detectorThread.stopDetection();
 			}
 		});
 
-	}
-
-	private Runnable recordActivity = new Runnable() {
-		public void run() {
-			Intent intent = new Intent(MainActivity.this,
-					AlarmRecordActivity.class);
-			startActivity(intent);
-		}
-	};
-
-	public void startOneShoot() {
-		int i = 5;
-		am.set(AlarmManager.RTC_WAKEUP,
-				System.currentTimeMillis() + (i * 1000), pendingIntent);
 	}
 
 	public void setLevel(int l) {
@@ -185,11 +81,7 @@ public class MainActivity extends Activity {
 	}
 
 	private void goHomeView() {
-		setContentView(mainView);
-		if (recorderThread != null) {
-			recorderThread.stopRecording();
-			recorderThread = null;
-		}
+
 		if (detectorThread != null) {
 			detectorThread.stopDetection();
 			detectorThread = null;
@@ -207,7 +99,6 @@ public class MainActivity extends Activity {
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch (item.getItemId()) {
 		case 0:
-			am.cancel(pendingIntent);
 			finish();
 			break;
 		default:

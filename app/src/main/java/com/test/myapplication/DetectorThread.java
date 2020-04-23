@@ -16,15 +16,11 @@ public class DetectorThread extends Thread {
 	private volatile Thread _thread;
 	private WaveHeader waveHeader;
 	private SnoringApi snoringApi;
-	// ----------------------------------
-	Handler alarmhandler;
-
-	// ----------------------------------
 
 	public DetectorThread() {
+		Log.d(TAG, "DetectorThread");
 		// TODO Auto-generated constructor stub
-		this.mWaveReader = new WavReader(filepath);
-		Log.e(TAG, "DetectorThread");
+		this.mWaveReader = new WavReader("/sdcard/Music/snore_sample3.wav");
 
 /*		if (audioRecord.getAudioFormat() == AudioFormat.ENCODING_PCM_16BIT) {
 			bitsPerSample = 16;
@@ -71,30 +67,23 @@ public class DetectorThread extends Thread {
 			// initBuffer();
 
 			Log.e(TAG, "run()");
-			Thread thisThread = Thread.currentThread();
-			while (_thread == thisThread) {
+//			while (_thread == thisThread) {
+//			while ( mDetectionState == true ) {
+			while ( mWaveReader.mFileReadComplete == false ) {
 				// detect sound
 				Log.e(TAG, "while");
 				buffer = mWaveReader.getFrameBytes();
-				if (buffer != null) {
-					Log.d(TAG, "buffer size " + buffer.length);
-				} else {
-					Log.d(TAG, "buffer is null");
-				}
-
+				Log.d(TAG, "buffer size " + buffer.length);
 				// audio analyst
-				if (buffer != null) {
-					Log.e(TAG, "How many bytes? " + buffer.length);
-					AlarmStaticVariables.snoringCount = snoringApi
-							.isSnoring(buffer);
-					Log.e(TAG,"count="
-							+ AlarmStaticVariables.snoringCount);
+				if (mWaveReader.mFileReadComplete == false) {
+					Log.d(TAG, "How many bytes? " + buffer.length);
+					AlarmStaticVariables.snoringCount = snoringApi.isSnoring(buffer);
+					Log.d(TAG,"count=" + AlarmStaticVariables.snoringCount);
 					break;
-
 					// end snore detection
 
 				} else {
-					// no sound detected
+					Log.d(TAG, "run() Read File Complete ");
 				//	MainActivity.snoreValue = 0;
 				}
 				// end audio analyst
